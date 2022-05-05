@@ -1,0 +1,81 @@
+---
+title: "Data Load"
+output: github_document
+---
+
+
+
+```{r}
+library(tidyverse)
+library(devtools)
+library(TCGAbiolinks)
+library(DT)
+```
+
+
+
+
+```{r}
+query.met <- GDCquery(
+    project = "TCGA-COAD",
+    data.category = "DNA Methylation",
+    legacy = FALSE,
+    platform = c("Illumina Human Methylation 450")
+)
+
+
+query.exp <- GDCquery(
+    project = "TCGA-COAD",
+    data.category = "Transcriptome Profiling",
+    data.type = "Gene Expression Quantification", 
+    workflow.type = "STAR - Counts"
+)
+```
+
+
+```{r}
+# Get all patients that have DNA methylation and gene expression.
+common.patients <- intersect(
+    substr(getResults(query.met, cols = "cases"), 1, 12),
+    substr(getResults(query.exp, cols = "cases"), 1, 12)
+)
+```
+
+
+```{r}
+# Only seelct the first 5 patients
+query.met <- GDCquery(
+    project = "TCGA-COAD",
+    data.category = "DNA Methylation",
+    legacy = FALSE,
+    platform = c("Illumina Human Methylation 450"),
+    barcode = common.patients[1:10]
+)
+
+query.exp <- GDCquery(
+    project = "TCGA-COAD",
+    data.category = "Transcriptome Profiling",
+    data.type = "Gene Expression Quantification", 
+    workflow.type = "STAR - Counts",
+    barcode = common.patients[1:10]
+)
+```
+
+```{r}
+datatable(
+    getResults(query.met, cols = c("data_type","cases")),
+    filter = 'top',
+    options = list(scrollX = TRUE, keys = TRUE, pageLength = 5), 
+    rownames = FALSE
+)
+```
+
+
+```{r}
+datatable(
+    getResults(query.exp, cols = c("data_type","cases")), 
+    filter = 'top',
+    options = list(scrollX = TRUE, keys = TRUE, pageLength = 5), 
+    rownames = FALSE
+)
+```
