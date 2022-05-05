@@ -10,8 +10,10 @@ library(dplyr)
 ```
 
 
+
+# WIll Change the code - this is an example - once we have the df 
 ```{r}
-#find sample size, mean, and standard deviation for each group
+#Find sample size, mean, and standard deviation for each group
 data %>%
   group_by(group) %>%
   summarise(
@@ -21,8 +23,13 @@ data %>%
   )
 ```
 
+
+
+**Visualize the Differences**
 ```{r}
-# Create boxplots using the boxplot() function in R to view the distribution of scores for the pre and post groups:
+#Create boxplots using the boxplot() function in R to view the distribution of scores for the pre and post groups:
+
+
 boxplot(score~group,
   data=data,
   main="Test Scores by Group",
@@ -38,7 +45,6 @@ boxplot(score~group,
 
 
 **Conduct a Paired t-test**
-
 Before we conduct the paired t-test, we should check that the distribution of differences is normally (or approximately normally) distributed. To do so, we can create a new vector defined as the difference between the pre and post scores, and perform a shapiro-wilk test for normality on this vector of values:
 ```{r}
 #define new vector for difference between post and pre scores
@@ -53,7 +59,7 @@ This means we can now proceed to conduct the paired t-test.
 
 
 ```{r}
-t.test(x, y, data = data, paired = TRUE, alternative = 'two.sided')
+t.test(x, y, paired = TRUE, alternative = 'two.sided')
 ```
 
 
