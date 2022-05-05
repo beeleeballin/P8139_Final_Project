@@ -1,0 +1,78 @@
+---
+title: "brca_data_load"
+output: github_document
+---
+
+
+```{r}
+library(TCGAbiolinks)
+library(dplyr)
+library(tidyverse)
+library(data.table)
+```
+
+```{r}
+query.exp <- GDCquery(
+    project = "TCGA-CESC", 
+    data.category = "Transcriptome Profiling",
+    data.type = "Gene Expression Quantification", 
+    workflow.type = "STAR - Counts",
+    sample.type = c("Primary Tumor")
+)
+GDCdownload(
+    query = query.exp,
+    files.per.chunk = 100
+)
+
+```
+
+```{r}
+query.exp <- GDCquery(
+    project = "TCGA-CESC", 
+    data.category = "Transcriptome Profiling",
+    data.type = "Gene Expression Quantification", 
+    workflow.type = "STAR - Counts",
+    sample.type = c("Solid Tissue Normal")
+)
+
+GDCdownload(query.exp)
+
+```
+
+
+
+```{r}
+files_to_read <- list.files(path = "cesc_tumor",pattern = "\\.tsv$",full.names = T)
+
+
+all_files <- lapply(files_to_read,function(x) {
+   read.table(file = x, 
+              sep = '\t', 
+              header = TRUE)
+})
+```
+
+```{r}
+tumor_df <- do.call(rbind.data.frame, all_files)
+```
+
+
+
+
+
+```{r}
+files_normal <- list.files(path = "normal_tissue",pattern = "\\.tsv$",full.names = T)
+
+
+normal_files <- lapply(files_normal,function(x) {
+   read.table(file = x, 
+              sep = '\t', 
+              header = TRUE)
+})
+```
+
+```{r}
+normal_df <- do.call(rbind.data.frame, normal_files)
+```
+
+
