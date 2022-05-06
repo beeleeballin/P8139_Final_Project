@@ -43,7 +43,7 @@ sample_data =
   mutate(gene_name = toupper(gene_name)) %>% 
   filter(gene_name %in% gene_list) %>% 
   distinct(gene_name, .keep_all = TRUE)
-gene_sample = sample(1:nrow(sample_data), 600)
+gene_sample = sample(1:nrow(sample_data), 2000)
 write_lines(gene_sample, file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_sample_ind")
 ```
 
@@ -60,6 +60,7 @@ sample_brca_data$STRING_id
 gene_int = string_db$get_interactions(sample_brca_data$STRING_id) %>% distinct(.keep_all = TRUE)
 
 for(i in seq_len(nrow(gene_int))){
+  print(i)
   gene_int[i, 1] = h[[gene_int[i, 1]]] 
   gene_int[i, 2] = h[[gene_int[i, 2]]] 
 }

@@ -23,6 +23,8 @@ gene_cor =
   cor() %>% 
   data.frame()
 
+gene_cor[is.na(gene_cor)] = 0
+
 write_csv(gene_cor, file="/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_gene_similarity")
 ```
 
@@ -53,9 +55,9 @@ corr_p_vals = p.adjust(p_vals[1,], method = "BH")
 p_vals_t = 
   data.frame(
     'gene' = names(corr_p_vals),
-    'sig' = corr_p_vals
+    'pval' = corr_p_vals
   ) %>% 
-  arrange(sig)
+  arrange(pval)
 
 write_csv(p_vals_t, file="/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/association_sig")
 ```

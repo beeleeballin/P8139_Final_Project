@@ -6,6 +6,7 @@ output: pdf_document
 ---
 ```{r}
 library(tidyverse)
+library(igraph)
 ```
 
 ```{r}
@@ -20,12 +21,8 @@ S_0 = read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modelin
 ```
 
 ```{r}
-S_0_alt = 
-  gene_int %>% 
-  pivot_wider(
-    names_from = to, 
-    values_from = combined_score
-  )
+gene_int_undir = graph.data.frame(gene_int, directed=F)
+S_0_alt = get.adjacency(gene_int_undir, attr="combined_score", sparse=F)
 
 miss_col = setdiff(colnames(S_0), colnames(S_0_alt))
 new_col = rep(NA, nrow(S_0_alt))
@@ -33,11 +30,8 @@ for(i in seq_len(length(miss_col))){
   S_0_alt =
     S_0_alt %>% 
     cbind(new_col)
-  names(S_0_alt)[ncol(S_0_alt)] = miss_col[i]
+  colnames(S_0_alt)[ncol(S_0_alt)] = miss_col[i]
 }
-
-rownames(S_0_alt) = S_0_alt[,1]
-S_0_alt[,1] = NULL
 
 miss_row = setdiff(colnames(S_0), rownames(S_0_alt))
 new_row = rep(NA, ncol(S_0_alt))
@@ -48,11 +42,12 @@ for(i in seq_len(length(miss_row))){
   rownames(S_0_alt)[nrow(S_0_alt)] = miss_row[i]
 }
 
+S_0_alt = S_0_alt[colnames(S_0), colnames(S_0)]
 S_0_alt[is.na(S_0_alt)] = 0
-col_names = names(S_0)
-S_0_alt = S_0_alt[col_names, col_names]
 
-sum(S_0_alt) == sum(gene_int$combined_score)
+sum(S_0_alt) == 2*sum(gene_int$combined_score)
+
+S_0_alt = S_0_alt %>% data.frame()
 
 write_csv(S_0_alt, file="~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/base_network")
 ```
