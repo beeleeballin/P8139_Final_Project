@@ -12,7 +12,8 @@ library(data.table)
 
 ```{r}
 data = 
-  read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/BRCA_data") %>% 
+  # read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/BRCA_data") %>% 
+  read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/paired_28_BRCA") %>% 
   arrange(id) %>% 
   mutate(data = factor(data), id = factor(id))
 
@@ -38,7 +39,7 @@ for(i in seq_len(600)){
     data %>%
     rename(this = names(data[, i+2])) %>% 
     select(data, id, this) %>% 
-    filter(as.integer(id)>244) %>% 
+    # filter(as.integer(id)>244) %>% 
     pivot_wider(
       names_from = data,
       values_from = this

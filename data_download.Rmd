@@ -24,15 +24,23 @@ se_post=post_process(se,percent=0.9)
 res=diffus_vec(signals,se_post,type="pvalue", beta=0.75, iter=10, difference=1e-6, top=100)
 ```
 
+```{r}
+ass_score = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/association_sig") %>% 
+  data.frame()
+base_network = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/base_network") %>% as.matrix()
+gene_sim = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_gene_similarity") %>% as.matrix()
+```
+
+```{r}
+SE = diffus_matrix(base_network, gene_sim, alpha=0.75, iter=10, difference=1e-6)
+SE_post = post_process(SE,percent=0.9)
+res=diffus_vec(signals,se_post,type="pvalue", beta=0.75, iter=10, difference=1e-6, top=100)
+```
+
+
 Acquire truly associated genes from DisGeNET database
 ```{r}
 true_brca = read_excel("~/Downloads/C0346153_disease_gda_summary.xlsx")
 true_brca = true_brca$Gene
-```
-
-```{r}
-ass_score = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/association_sig")
-base_network = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/base_network")
-gene_sim = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_gene_similarity")
 ```
 

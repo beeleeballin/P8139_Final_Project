@@ -49,6 +49,8 @@ for(i in seq_len(length(miss_row))){
 }
 
 S_0_alt[is.na(S_0_alt)] = 0
+col_names = names(S_0)
+S_0_alt = S_0_alt[col_names, col_names]
 
 sum(S_0_alt) == sum(gene_int$combined_score)
 
