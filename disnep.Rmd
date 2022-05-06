@@ -7,6 +7,7 @@ output: pdf_document
 ```{r}
 library(tidyverse)
 library(DiSNEP)
+library(readxl)
 ```
 
 ```{r}
@@ -142,5 +143,6 @@ Acquire truly associated genes from DisGeNET database
 ```{r}
 true_brca = read_excel("~/Downloads/C0346153_disease_gda_summary.xlsx")
 true_brca = true_brca$Gene
+write_lines(true_brca, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/TRUE_genes")
 ```
 
