@@ -4,19 +4,20 @@ author: "Brian Jo Hsuan Lee"
 date: "5/6/2022"
 output: pdf_document
 ---
-```{r}
+```{r, echo=F, message=F}
 library(tidyverse)
 library(data.table)
 ```
 
-```{r}
+Load the 3 lists of prioritized genes and the list of true genes
+```{r, message=F}
 disnep = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/DiSNEP_genes")
 gw = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/GW_genes")
 control = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/association_sig")
-control = control[1:500,]
 true = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/TRUE_genes")
 ```
 
+Create and show a table of true gene counts for the 3 methods when m increases
 ```{r}
 top_m = matrix(rep(NA, 44), ncol = 11)
 
@@ -32,12 +33,13 @@ for(i in seq_len(11)){
 }
 
 top_m = top_m %>% data.frame() %>% transpose()
-
 rownames(top_m) = seq(0, 500, by = 50)
-names(top_m)= c("x", "DiSNEP", "GeneWanderer", "Control")
+names(top_m)= c("m", "DiSNEP", "GeneWanderer", "Control")
+knitr::kable(top_m)
 ```
 
-```{r}
+Visualize the curves 
+```{r, echo=F}
 top_m_pivot = 
   top_m %>% 
   pivot_longer(
@@ -47,7 +49,7 @@ top_m_pivot =
   )
 
 plot = 
-  ggplot(top_m_pivot, aes(x = x, y = count, color = response)) +
+  ggplot(top_m_pivot, aes(x = m, y = count, color = response)) +
   geom_line(aes(linetype=response)) +
   geom_point(aes(shape=response)) +
   labs(

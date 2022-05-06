@@ -1,19 +1,19 @@
 ---
-title: "corr and association"
+title: "Correlation Matrix & Association Signals"
 author: "Brian Jo Hsuan Lee"
 date: "5/6/2022"
 output: pdf_document
 ---
 
-```{r}
+```{r, message=F, echo=F}
 library(tidyverse)
 library(data.table)
 ```
 
-```{r}
+Load data and acquire the correlation matrix without non-gene columns. Save the correlation matrix. 
+```{r, message=F, warning=F}
 data = 
   read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/BRCA_data") %>% 
-  ## read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/paired_28_BRCA") %>% 
   arrange(id) %>% 
   mutate(data = factor(data), id = factor(id))
 
@@ -28,10 +28,8 @@ gene_cor[is.na(gene_cor)] = 0
 write_csv(gene_cor, file="/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_gene_similarity")
 ```
 
-
+Create a vector of adjusted p-values for running a paired t-test on each gene. Save the association significance.
 ```{r}
-paired_id = levels(data$id)[245:length(levels(data$id))] 
-
 p_vals = 
   data[1, ] %>%
   select(-data, -id)

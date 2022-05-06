@@ -1,29 +1,28 @@
 ---
-title: "base_network"
+title: "Base Gene Interaction Matrix"
 author: "Brian Jo Hsuan Lee"
 date: "5/5/2022"
 output: pdf_document
 ---
-```{r}
+```{r, message=F, echo=F}
 library(tidyverse)
 library(igraph)
 ```
 
-```{r}
-file_path = "~/Downloads/TCGA/"
-tumor_f = list.files(path = file_path, pattern = "T.tsv")
-norm_f = list.files(path = file_path, pattern = "N.tsv")
-gene_sample = read_lines(file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_sample_ind") %>% 
-  as.numeric()
+Load pre-curated datasets, including sampled gene indices, gene interaction
+```{r, message=F}
 gene_int = read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_int")
-gene_list = read_lines(file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_list")
 S_0 = read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/s0_zero_matrix")
 ```
 
+Create an undirected interaction matrix
 ```{r}
 gene_int_undir = graph.data.frame(gene_int, directed=F)
 S_0_alt = get.adjacency(gene_int_undir, attr="combined_score", sparse=F)
+```
 
+Fill in the missing columns and rows
+```{r}
 miss_col = setdiff(colnames(S_0), colnames(S_0_alt))
 new_col = rep(NA, nrow(S_0_alt))
 for(i in seq_len(length(miss_col))){
@@ -41,13 +40,18 @@ for(i in seq_len(length(miss_row))){
     rbind(new_row)
   rownames(S_0_alt)[nrow(S_0_alt)] = miss_row[i]
 }
+```
 
+Reorder the columns and rows, and fill in 0s where NA is present
+```{r}
 S_0_alt = S_0_alt[colnames(S_0), colnames(S_0)]
 S_0_alt[is.na(S_0_alt)] = 0
+```
 
+Save the matrix upon validating the interaction dataframe is succesffully converted
+```{r}
 sum(S_0_alt) == 2*sum(gene_int$combined_score)
 
 S_0_alt = S_0_alt %>% data.frame()
-
 write_csv(S_0_alt, file="~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/base_network")
 ```

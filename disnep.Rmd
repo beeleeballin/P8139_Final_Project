@@ -1,16 +1,17 @@
 ---
-title: "Data Download"
+title: "DiSNEP"
 author: "Brian Jo Hsuan Lee"
-date: "5/3/2022"
+date: "5/5/2022"
 output: pdf_document
 ---
-```{r}
+```{r, message=FALSE, echo=F}
 library(tidyverse)
 library(DiSNEP)
 library(readxl)
 ```
 
-```{r}
+Load association scores, base network, and similarity matrix
+```{r, message=F}
 ass_score = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/association_sig") %>% 
   data.frame()
 
@@ -21,12 +22,12 @@ gene_sim = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistica
 rownames(gene_sim) = colnames(gene_sim)
 ```
 
+Modify the diffuse matrix function a little
 ```{r}
 diffus_matrix=function(s0,adjacency,alpha=0.75,iter=10,difference=1e-6){
 
   require(SMUT)
 
-  #prepocessing
   gene=intersect(rownames(s0),rownames(adjacency))
 
   s0=s0[rownames(s0) %in% gene,]
@@ -45,12 +46,9 @@ diffus_matrix=function(s0,adjacency,alpha=0.75,iter=10,difference=1e-6){
   ## added line of code to ensure every entry has a value. may be the source of our undesirable output
   adjacency[is.na(adjacency)] = 0
   
-
-  #initialize
   snet_1=s0
   snet=snet_1
 
-  #diffusion on adjacency matrix
   for(kk in 1:iter){
     
     snet_1<-alpha*eigenMapMatMult(adjacency,snet)+(1-alpha)*(s0)
@@ -65,12 +63,12 @@ diffus_matrix=function(s0,adjacency,alpha=0.75,iter=10,difference=1e-6){
 }
 ```
 
+Modify the diffuse vector function a little as well
 ```{r}
 diffus_vec=function(signals,snet,type,beta=0.75,iter=10,difference=1e-6,top=100){
 
   require(SMUT)
 
-  #pre-precoss association signals
   if (type=="pvalue"){
     signals[,2]=-qnorm(signals[,2])
     colnames(signals)=c("gene","score")
@@ -78,12 +76,9 @@ diffus_vec=function(signals,snet,type,beta=0.75,iter=10,difference=1e-6,top=100)
     colnames(signals)=c("gene","score")
   }
 
-  #column nomorlize the network
   snet=t(t(snet)/(colSums(snet)+.Machine$double.eps))
   snet[is.na(snet)] = 0
 
-  #signals: gene  score
-  #intialize
   p=as.matrix(signals$score)
   
   ## added line of code to ensure every entry has a value 
@@ -92,7 +87,6 @@ diffus_vec=function(signals,snet,type,beta=0.75,iter=10,difference=1e-6,top=100)
   p1=p
   j=1
 
-  #diffusion on network
   repeat{
     
     p=p1
@@ -108,8 +102,6 @@ diffus_vec=function(signals,snet,type,beta=0.75,iter=10,difference=1e-6,top=100)
     if (p_diff<1e-6) {break}
 
   }
-
-  #prioritize genes by their enhanced score
   res=data.frame(gene=signals$gene,score=p1)
   res=res[order(res$score,decreasing = T),]
   res=res[1:top,]
@@ -117,18 +109,32 @@ diffus_vec=function(signals,snet,type,beta=0.75,iter=10,difference=1e-6,top=100)
 }
 ```
 
+DiSNEP on our data! Save the ranked gene list.
 ```{r}
+# Step 1. Due to divergence, limit the iteration to 5..
 SE = diffus_matrix(base_network, gene_sim, alpha=0.75, iter=5, difference=1e-6)
 SE_post = post_process(SE,percent=0.9)
+
+# Step 2
 res = diffus_vec(ass_score, SE_post, type="pvalue", beta=0.75, iter=10, difference=1e-6, top=500)
+
 write_csv(res, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/DiSNEP_genes")
 ```
 
+Run GeneWanderer on our data save the ranked gene list as well.
 ```{r}
 gw_res = diffus_vec(ass_score, base_network, type="pvalue", beta=0.75, iter=10, difference=1e-6, top=500)
 write_csv(gw_res, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/GW_genes")
 ```
 
+Acquire truly associated genes from DisGeNET database. Save the output. 
+```{r}
+true_brca = read_excel("~/Downloads/C0346153_disease_gda_summary.xlsx")
+true_brca = true_brca$Gene
+write_lines(true_brca, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/TRUE_genes")
+```
+
+Example code provided
 ```{r}
 data("s0")
 data("adjacency")
@@ -138,11 +144,3 @@ se=diffus_matrix(s0,adjacency,alpha=0.75,iter=10, difference=1e-6)
 se_post=post_process(se,percent=0.9)
 res=diffus_vec(signals,se_post,type="pvalue", beta=0.75, iter=10, difference=1e-6, top=100)
 ```
-
-Acquire truly associated genes from DisGeNET database
-```{r}
-true_brca = read_excel("~/Downloads/C0346153_disease_gda_summary.xlsx")
-true_brca = true_brca$Gene
-write_lines(true_brca, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/TRUE_genes")
-```
-

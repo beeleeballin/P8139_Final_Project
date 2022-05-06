@@ -4,37 +4,48 @@ author: "Brian Jo Hsuan Lee"
 date: "5/5/2022"
 output: pdf_document
 ---
-```{r}
+```{r, message = F, echo=F}
 library(tidyverse)
 library(data.table)
 ```
 
-
+Load file paths and pre curated data, including sample indices and list of mapped genes (18812)
 ```{r}
 file_path = "~/Downloads/TCGA/"
 tumor_f = list.files(path = file_path, pattern = "T.tsv")
 norm_f = list.files(path = file_path, pattern = "N.tsv")
-gene_sample = read_lines(file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_sample_ind") %>% 
+sample_ind = read_lines(file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_sample_ind") %>% 
   as.numeric()
 gene_list = read_lines(file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_list")
 ```
 
-
-```{r}
+Binding the 28 tumor cell data 
+```{r, message=F}
+# begin with the first tumor cell data 
 all_data = 
+  # 60600 x 9
   read_delim(file = paste(file_path, tumor_f[1], sep = ""),
              skip = 1, delim = "\t", quote = "") %>% 
+  # rid all read columns besides TSM unstranded and gene name
   select(gene_name, tpm_unstranded) %>% 
+  # the 18812 mapped genes are in uppercase, so case matching is important
   mutate(gene_name = toupper(gene_name)) %>% 
+  # drop the first 4 non-gene expression rows, and rid all gene off the mapped gene list
   filter(!row_number() %in% c(1:4),
          gene_name %in% gene_list) %>% 
+  # some genes are repeats (for some reasons). instead of tallying them, rid the repeats
   distinct(gene_name, .keep_all = TRUE) %>% 
+  # reorder them to ensure the sample indices always point to the same genes
   arrange(gene_name) %>% 
-  filter(row_number() %in% gene_sample) %>% 
+  # rid the genes off the sampled gene list
+  filter(row_number() %in% sample_ind) %>% 
   data.frame() %>% 
+  # note whether the entry is a case or control
   rbind(c("data", 'case')) %>% 
+  # note the id of the entry for paired t test down the line
   rbind(c("id", substring(tumor_f[1], first=6, last=12)))
 
+# continue with the other 27 tumor cell data 
 for(i in seq_len(length(tumor_f))[-1]){
   new_data = 
     read_delim(file = paste(file_path, tumor_f[i], sep = ""),
@@ -45,13 +56,14 @@ for(i in seq_len(length(tumor_f))[-1]){
            gene_name %in% gene_list) %>% 
     distinct(gene_name, .keep_all = TRUE) %>% 
     arrange(gene_name) %>% 
-    filter(row_number() %in% gene_sample) %>% 
+    filter(row_number() %in% sample_ind) %>% 
     data.frame() %>% 
     rbind(c("data", 'case')) %>% 
     rbind(c("id", substring(tumor_f[i], first=6, last=12)))
   all_data = all_data %>% full_join(new_data, by = "gene_name")
 }
-    
+
+# continue with the 28 paired adjacent normal tissue cell data 
 for(i in seq_len(length(norm_f))){
   new_data = 
     read_delim(file = paste(file_path, norm_f[i], sep = ""),
@@ -62,13 +74,14 @@ for(i in seq_len(length(norm_f))){
            gene_name %in% gene_list) %>% 
     distinct(gene_name, .keep_all = TRUE) %>% 
     arrange(gene_name) %>% 
-    filter(row_number() %in% gene_sample) %>% 
+    filter(row_number() %in% sample_ind) %>% 
     data.frame() %>% 
     rbind(c("data", 'control')) %>% 
     rbind(c("id", substring(norm_f[i], first=6, last=12)))
   all_data = all_data %>% full_join(new_data, by = "gene_name")
 }
 
+# cells to column, entries to rows
 all_data_t =
   all_data %>%
   transpose() %>% 
@@ -76,6 +89,7 @@ all_data_t =
   dplyr::select("data", "id", everything())
 ```
 
+Save the 28 pair tumor normal cell gene expression data to be combined the with rest of 244 files.
 ```{r}
 write_csv(all_data_t, file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/paired_28_BRCA")
 ```
