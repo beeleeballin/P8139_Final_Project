@@ -19,33 +19,6 @@ data("signals")
 ```
 
 ```{r}
-file_path = "~/Downloads/TCGA/"
-tumor_f = list.files(path = file_path, pattern = "T.tsv")
-norm_f = list.files(path = file_path, pattern = "N.tsv")
-gene_sample = read_lines(file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_sample_ind") %>% 
-  as.numeric()
-gene_int = read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_int")
-S_0 = read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/s0_zero_matrix")
-```
-
-Trim the STRING general network and arrive at our base network S_0
-```{r}
-for(i in seq_len(nrow(S_0))) {
-    for(j in seq_len(ncol(S_0))) {
-        for(k in seq_len(nrow(gene_int))) {
-            if((gene_int$from[k] == rownames(S_0)[i]) && (gene_int$to[k] == names(S_0)[j])){
-                S_0[i,j] = gene_int$combined_score[k]
-            }
-        }
-    }
-}
-
-sum(S_0) == sum(gene_int$combined_score)
-
-S_0 = matrix(S_0)
-```
-
-```{r}
 se=diffus_matrix(s0,adjacency,alpha=0.75,iter=10, difference=1e-6)
 se_post=post_process(se,percent=0.9)
 res=diffus_vec(signals,se_post,type="pvalue", beta=0.75, iter=10, difference=1e-6, top=100)
@@ -57,33 +30,9 @@ true_brca = read_excel("~/Downloads/C0346153_disease_gda_summary.xlsx")
 true_brca = true_brca$Gene
 ```
 
-DisGeNET API
 ```{r}
-library(httr)
-
-auth_params <- list("email"="change@this.email","password"="changethis")
-
-api_host <- "https://www.disgenet.org/api"
-
-api_key <- NULL
-
-r <-POST(paste(api_host,"/auth/", sep=""), body=auth_params)
-if(status_code(r)==200){
-    #Lets store the api key in a new variable and use it again in new requests
-    json_response <- content(r, "parsed")
-    api_key <- json_response$token
-    print(paste(api_key," This is your user API key.",sep="")) #Comment this line if you don't want your API key to show up in the terminal
-}else{
-    print(status_code(r))
-    print(content(r, "parsed"))
-}
-
-if(!is.null(api_key)){
-    #Store the api key into a named list with the following format, see next line.
-    authorization_headers <- c(Authorization=paste("Bearer ",api_key, sep=""))
-    #Lets get all the diseases associated to a gene eg. APP (EntrezID 351) and restricted by a source.
-    gda_response <- GET(paste(api_host,"/gda/gene/351",sep=""), query=list(source="UNIPROT"), add_headers(.headers=authorization_headers)) #All protected endpoints require the add_headers and the authorization token in order to be accessed.
-    print(content(gda_response, "parsed"))
-}
+ass_score = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/association_sig")
+base_network = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/base_network")
+gene_sim = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_gene_similarity")
 ```
 

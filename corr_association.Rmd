@@ -1,0 +1,60 @@
+---
+title: "corr and association"
+author: "Brian Jo Hsuan Lee"
+date: "5/6/2022"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+library(data.table)
+```
+
+```{r}
+data = 
+  read_csv("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/BRCA_data") %>% 
+  arrange(id) %>% 
+  mutate(data = factor(data), id = factor(id))
+
+gene_cor =
+  data %>% 
+  select(-data, -id) %>% 
+  cor() %>% 
+  data.frame()
+
+write_csv(gene_cor, file="/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_gene_similarity")
+```
+
+
+```{r}
+paired_id = levels(data$id)[245:length(levels(data$id))] 
+
+p_vals = 
+  data[1, ] %>%
+  select(-data, -id)
+
+for(i in seq_len(600)){
+  paired_data= 
+    data %>%
+    rename(this = names(data[, i+2])) %>% 
+    select(data, id, this) %>% 
+    filter(as.integer(id)>244) %>% 
+    pivot_wider(
+      names_from = data,
+      values_from = this
+    )
+  test_obj = t.test(paired_data$case, paired_data$control, paired = TRUE, alternative = 'two.sided')
+  p_vals[1, i] = test_obj$p.value
+}
+
+corr_p_vals = p.adjust(p_vals[1,], method = "BH")
+
+p_vals_t = 
+  data.frame(
+    'gene' = names(corr_p_vals),
+    'sig' = corr_p_vals
+  ) %>% 
+  arrange(sig)
+
+write_csv(p_vals_t, file="/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/association_sig")
+```
