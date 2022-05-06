@@ -1,0 +1,59 @@
+---
+title: "gene_sample_gene_network"
+author: "Brian Jo Hsuan Lee"
+date: "5/5/2022"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+library(STRINGdb)
+library(readxl)
+library(readr)
+```
+
+read in the first BRCA tumor sample file
+```{r}
+file_path = "~/Downloads/TCGA/"
+tumor_f = list.files(path = file_path, pattern = "T.tsv")
+
+sample_data = 
+  read_delim(file = paste(file_path, tumor_f[1], sep = ""), 
+             skip = 1, delim = "\t", quote = "") %>% 
+  filter(!row_number() %in% c(1:4)) %>% 
+  select(gene_name, tpm_unstranded) %>% 
+  data.frame()
+```
+
+the STRING general network maps close to 19000 genes in the BRCA data. save the list of mapped genes
+```{r}
+string_db = STRINGdb$new(version="11", species=9606, score_threshold=200, input_directory="")
+example_mapped = string_db$map(sample_data, "gene_name", removeUnmappedRows = T) %>% distinct(STRING_id, .keep_all = TRUE)
+gene_list = example_mapped$gene_name
+write_lines(gene_list, file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_list")
+length(example_mapped$gene_name)
+```
+
+randomly sample 600 mapped genes. save the indices of the sampled mapped genes
+```{r}
+set.seed(2022)
+sample_data =
+  sample_data %>% 
+  mutate(gene_name = toupper(gene_name)) %>% 
+  filter(gene_name %in% gene_list)
+gene_sample = sample(1:nrow(sample_data), 600)
+write_lines(gene_sample, file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_sample_ind")
+```
+
+build an empty matrix of sampled genes to fill in in the interactions later
+```{r}
+sample_brca_data = example_mapped[gene_sample, ]
+sample_brca_data$STRING_id
+gene_int = string_db$get_interactions(sample_brca_data$STRING_id) %>% distinct(.keep_all = TRUE)
+write_csv(gene_int, file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_int")
+S_0 = matrix(0, nrow=length(sample_brca_data$STRING_id), ncol=length(sample_brca_data$STRING_id)) %>% data.frame()
+names(S_0) = sample_brca_data$STRING_id
+rownames(S_0) = sample_brca_data$STRING_id
+write_csv(S_0, file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/s0_zero_matrix")
+```
+

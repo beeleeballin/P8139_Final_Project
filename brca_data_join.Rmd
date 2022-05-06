@@ -1,0 +1,79 @@
+---
+title: "BRCA Data Join"
+author: "Brian Jo Hsuan Lee"
+date: "5/5/2022"
+output: pdf_document
+---
+```{r}
+library(tidyverse)
+library(data.table)
+```
+
+
+```{r}
+file_path = "~/Downloads/TCGA/"
+tumor_f = list.files(path = file_path, pattern = "T.tsv")
+norm_f = list.files(path = file_path, pattern = "N.tsv")
+gene_sample = read_lines(file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_sample_ind") %>% 
+  as.numeric()
+gene_list = read_lines(file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_list")
+```
+
+
+```{r}
+all_data = 
+  read_delim(file = paste(file_path, tumor_f[1], sep = ""),
+             skip = 1, delim = "\t", quote = "") %>% 
+  select(gene_name, tpm_unstranded) %>% 
+  mutate(gene_name = toupper(gene_name)) %>% 
+  filter(!row_number() %in% c(1:4),
+         gene_name %in% gene_list) %>% 
+  arrange(gene_name) %>% 
+  filter(row_number() %in% gene_sample) %>% 
+  data.frame() %>% 
+  rbind(c("data", 'case')) %>% 
+  rbind(c("id", substring(tumor_f[1], first=6, last=12)))
+
+for(i in seq_len(length(tumor_f))[-1]){
+  new_data = 
+    read_delim(file = paste(file_path, tumor_f[i], sep = ""),
+               skip = 1, delim = "\t", quote = "") %>% 
+    select(gene_name, tpm_unstranded) %>% 
+    mutate(gene_name = toupper(gene_name)) %>% 
+    filter(!row_number() %in% c(1:4),
+           gene_name %in% gene_list) %>% 
+    arrange(gene_name) %>% 
+    filter(row_number() %in% gene_sample) %>% 
+    data.frame() %>% 
+    rbind(c("data", 'case')) %>% 
+    rbind(c("id", substring(tumor_f[i], first=6, last=12)))
+  all_data = all_data %>% full_join(new_data, by = "gene_name")
+}
+    
+for(i in seq_len(length(norm_f))){
+  new_data = 
+    read_delim(file = paste(file_path, norm_f[i], sep = ""),
+               skip = 1, delim = "\t", quote = "") %>% 
+    select(gene_name, tpm_unstranded) %>% 
+    mutate(gene_name = toupper(gene_name)) %>% 
+    filter(!row_number() %in% c(1:4),
+           gene_name %in% gene_list) %>% 
+    arrange(gene_name) %>% 
+    filter(row_number() %in% gene_sample) %>% 
+    data.frame() %>% 
+    rbind(c("data", 'control')) %>% 
+    rbind(c("id", substring(norm_f[i], first=6, last=12)))
+  all_data = all_data %>% full_join(new_data, by = "gene_name")
+}
+
+all_data_t =
+  all_data %>%
+  transpose() %>% 
+  janitor::row_to_names(row_number = 1) %>% 
+  dplyr::select("data", "id", everything())
+```
+
+```{r}
+write_csv(all_data_t, file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/paired_28_BRCA")
+```
+
