@@ -121,12 +121,12 @@ diffus_vec=function(signals,snet,type,beta=0.75,iter=10,difference=1e-6,top=100)
 SE = diffus_matrix(base_network, gene_sim, alpha=0.75, iter=5, difference=1e-6)
 SE_post = post_process(SE,percent=0.9)
 res = diffus_vec(ass_score, SE_post, type="pvalue", beta=0.75, iter=10, difference=1e-6, top=500)
-write_lines(res, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/DiSNEP_genes")
+write_csv(res, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/DiSNEP_genes")
 ```
 
 ```{r}
 gw_res = diffus_vec(ass_score, base_network, type="pvalue", beta=0.75, iter=10, difference=1e-6, top=500)
-write_lines(gw_res, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/GW_genes")
+write_csv(gw_res, file = "/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/GW_genes")
 ```
 
 ```{r}
