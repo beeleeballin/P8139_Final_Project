@@ -28,6 +28,7 @@ all_data =
   mutate(gene_name = toupper(gene_name)) %>% 
   filter(!row_number() %in% c(1:4),
          gene_name %in% gene_list) %>% 
+  distinct(gene_name, .keep_all = TRUE) %>% 
   arrange(gene_name) %>% 
   filter(row_number() %in% gene_sample) %>% 
   data.frame() %>% 
@@ -42,6 +43,7 @@ for(i in seq_len(length(tumor_f))[-1]){
     mutate(gene_name = toupper(gene_name)) %>% 
     filter(!row_number() %in% c(1:4),
            gene_name %in% gene_list) %>% 
+    distinct(gene_name, .keep_all = TRUE) %>% 
     arrange(gene_name) %>% 
     filter(row_number() %in% gene_sample) %>% 
     data.frame() %>% 
@@ -58,6 +60,7 @@ for(i in seq_len(length(norm_f))){
     mutate(gene_name = toupper(gene_name)) %>% 
     filter(!row_number() %in% c(1:4),
            gene_name %in% gene_list) %>% 
+    distinct(gene_name, .keep_all = TRUE) %>% 
     arrange(gene_name) %>% 
     filter(row_number() %in% gene_sample) %>% 
     data.frame() %>% 

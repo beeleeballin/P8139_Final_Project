@@ -8,6 +8,7 @@ output: pdf_document
 ```{r}
 library(tidyverse)
 library(STRINGdb)
+library(hash)
 library(readxl)
 library(readr)
 library(hash)
@@ -42,7 +43,8 @@ sample_data =
   sample_data %>% 
   mutate(gene_name = toupper(gene_name)) %>% 
   filter(gene_name %in% gene_list) %>% 
-  distinct(gene_name, .keep_all = TRUE)
+  distinct(gene_name, .keep_all = TRUE) %>% 
+  arrange(gene_name)
 gene_sample = sample(1:nrow(sample_data), 2000)
 write_lines(gene_sample, file = "~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/gene_sample_ind")
 ```
@@ -51,7 +53,9 @@ build an empty matrix of sampled genes to fill in in the interactions later
 ```{r}
 example_mapped_reduced = example_mapped[, c(1, 3)]
 sample_data = inner_join(sample_data, example_mapped_reduced)
-sample_brca_data = sample_data[gene_sample, ]
+sample_brca_data = 
+  arrange(sample_data) %>% 
+  filter(row_number() %in% gene_sample)
 h = hash()
 for(i in seq_len(nrow(sample_brca_data))){
   h[[sample_brca_data[i, 3]]] = sample_brca_data[i, 1]
