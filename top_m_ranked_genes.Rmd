@@ -1,0 +1,68 @@
+---
+title: "Top M Ranked Genes"
+author: "Brian Jo Hsuan Lee"
+date: "5/6/2022"
+output: pdf_document
+---
+```{r}
+library(tidyverse)
+library(data.table)
+```
+
+```{r}
+disnep = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/DiSNEP_genes")
+gw = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/GW_genes")
+control = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/association_sig")
+control = control[1:500,]
+true = read_csv("/Users/beelee/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/TRUE_genes")
+```
+
+```{r}
+top_m = matrix(rep(NA, 44), ncol = 11)
+
+for(i in seq_len(11)){
+  m = (i-1)*50
+  d = length(intersect(disnep[1:m, ]$gene, true$PALB2))
+  g = length(intersect(gw[1:m, ]$gene, true$PALB2))
+  c = length(intersect(control[1:m, ]$gene, true$PALB2))
+  top_m[1, i] = m
+  top_m[2, i] = d
+  top_m[3, i] = g
+  top_m[4, i] = c
+}
+
+top_m = top_m %>% data.frame() %>% transpose()
+
+rownames(top_m) = seq(0, 500, by = 50)
+names(top_m)= c("x", "DiSNEP", "GeneWanderer", "Control")
+```
+
+```{r}
+top_m_pivot = 
+  top_m %>% 
+  pivot_longer(
+    DiSNEP:Control, 
+    names_to = "response",
+    values_to = "count"
+  )
+
+plot = 
+  ggplot(top_m_pivot, aes(x = x, y = count, color = response)) +
+  geom_line(aes(linetype=response)) +
+  geom_point(aes(shape=response)) +
+  labs(
+    title = "Number of True Signal Genes out of Top Ranked m Genes",
+    x = "Top m Ranked Genes",
+    y = "Number of True Signal Genes"
+  ) +
+  theme_test()+
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12),
+    legend.title = element_blank(),
+    legend.position = c(.15, .9),
+    legend.box.background = element_rect(colour = "black")
+  )
+
+ggsave("~/Desktop/Columbia/Spring_2022/P8139-Statistical_Genetic_Modeling/Project/top_m_ranked.png", plot = plot)
+```
+
